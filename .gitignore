@@ -43,3 +43,7 @@ nosetests.xml
 hostthedocs/static/docfiles/*
 foo.html
 index.html
+
+
+# Visual Studio Code
+.vscode

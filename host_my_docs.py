@@ -75,7 +75,7 @@ def delete(host, metadata, deleteall=False):
 def generate_htd_docs():
     from docutils.core import publish_string
     with open('README.rst') as f:
-        html = publish_string(f.read(),writer_name='html')
+        html = publish_string(f.read(),writer_name='html').decode('utf8')
     with open('index.html', 'w') as f:
         f.write(html)
     zippath = 'docstemp.zip'
@@ -86,9 +86,9 @@ def generate_htd_docs():
 
     metadata = {
         'name': 'Host the Docs',
-        'version': 'latest',
+        'version': '2.3.0',
         'description': 'Makes documentation hosting easy.'}
-    host = 'tech-artists.org:5003'
+    host = 'localhost:5000'
 
     try:
         resp = post(host, metadata, zippath)

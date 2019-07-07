@@ -90,9 +90,12 @@ def parse_docfiles(docfiles_dir, link_root):
 def unpack_project(uploaded_file, proj_metadata, docfiles_dir):
     projdir = os.path.join(docfiles_dir, proj_metadata['name'])
     verdir = os.path.join(projdir, proj_metadata['version'])
+    store_dir = os.path.join(projdir, 'store')
 
     if not os.path.isdir(verdir):
         os.makedirs(verdir)
+    if not os.path.isdir(store_dir):
+        os.makedirs(store_dir)
 
     # Overwrite project description only if a (non empty) new one has been
     # provided
@@ -102,9 +105,9 @@ def unpack_project(uploaded_file, proj_metadata, docfiles_dir):
         with open(descrpath, 'w', encoding='utf-8') as f:
             f.write(descr)
 
-    # This is insecure, we are only accepting things from trusted sources.
-    with util.FileExpander(uploaded_file) as compressed_file:
-        compressed_file.extractall(verdir)
+    filename = uploaded_file.save(store_dir)
+    compressed_file = zipfile.ZipFile(filename)
+    compressed_file.extractall(verdir)
 
 
 def valid_name(s):

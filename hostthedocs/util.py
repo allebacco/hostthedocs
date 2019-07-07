@@ -4,8 +4,6 @@ Provides utility methods.
 
 import os
 import logging
-import zipfile
-import tarfile
 
 
 logger = logging.getLogger()
@@ -16,14 +14,10 @@ class UploadedFile(object):
     UploadedFile represents a file uploaded during a POST request.
     """
 
-    def __init__(self, filename, stream):
+    def __init__(self, file_):
         """Instantiate an UploadedFile
-
-        :param str filename: The name of the file.
-        :param stream: The open file stream.
         """
-        self._filename = filename
-        self._stream = stream
+        self._file = file_
 
     @classmethod
     def from_request(cls, request):
@@ -44,68 +38,23 @@ class UploadedFile(object):
             raise ValueError('Request does not contain uploaded file')
 
         current_file = uploaded_files[0]
-        return cls(current_file.filename, current_file.stream)
+        return cls(current_file)
 
     def get_filename(self):
-        return self._filename
+        return self._file.filename
 
     def get_stream(self):
-        return self._stream
+        return self._file.stream
+
+    def save(self, directory):
+        filename = os.path.join(directory, self.get_filename())
+        self._file.save(filename)
+        return filename
 
     def close(self):
         """close the file stream
         """
         try:
-            self._stream.close()
+            self.get_stream().close()
         except:
             pass
-
-
-class FileExpander(object):
-    """
-    Manager for exanding compressed project files.
-
-    It automatically detects the compression method and allocates
-    the right handler.
-
-    Currently the supported methods are:
-    - zip
-    - tar
-    """
-
-    ZIP_EXTENSIONS = ('.zip', )
-    TAR_EXTENSIONS = ('.tar', '.tgz', '.tar.gz', '.tar.bz2')
-
-    def __init__(self, uploaded_file):
-        self._file = uploaded_file
-        self._handle = None
-
-    @classmethod
-    def detect_compression_method(cls, filename):
-        """
-        Attempt to detect the compression method from the filename extension.
-
-        :param str extension: The file extension.
-        :return: The compression method ('zip' or 'tar').
-        :raises ValueError: If fails to detect the compression method.
-        """
-        if any(filename.endswith(ext) for ext in cls.ZIP_EXTENSIONS):
-            return 'zip'
-        if any(filename.endswith(ext) for ext in cls.TAR_EXTENSIONS):
-            return 'tar'
-
-        raise ValueError('Unknown compression method for %s' % filename)
-
-    def __enter__(self):
-        method = self.detect_compression_method(self._file.get_filename())
-        if method == 'zip':
-            self._handle = zipfile.ZipFile(self._file.get_stream())
-        elif method == 'tar':
-            self._handle = tarfile.open(fileobj=self._file.get_stream(), mode='r:*')
-        else:
-            raise ValueError('Unsupported method %s' % method)
-
-        return self._handle
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self._handle.close()
