@@ -4,10 +4,39 @@ from flask import abort, Flask, jsonify, redirect, render_template, request
 
 from . import getconfig, util
 from .filekeeper import delete_files, insert_link_to_latest, parse_docfiles, unpack_project
+from . import database
 
 app = Flask(__name__)
 
 app.config['MAX_CONTENT_LENGTH'] = getconfig.max_content_mb * 1024 * 1024
+
+
+@app.route('/hmfd/projects', methods=['POST'])
+def add_project():
+    if getconfig.readonly:
+        return abort(403)
+
+    json_data = request.get_json()
+    if json_data is None:
+        abort(400, "Missing or invalid JSON data")
+    if 'name' not in json_data:
+        abort(400, "name missing from JSON data")
+    if 'description' not in json_data:
+        abort(400, "description missing from JSON data")
+
+    ok = database.add_project(json_data['name'], json_data['description'])
+
+    if ok:
+        return jsonify({'success': True})
+    
+    return abort(500)
+
+
+@app.route('/hmfd/projects', methods=['GET'])
+def get_projects():
+
+    projects = database.get_projects()
+    return jsonify([p.to_dict() for p in projects])
 
 
 @app.route('/hmfd', methods=['POST'])
