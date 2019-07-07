@@ -54,15 +54,16 @@ def _get_proj_dict(docfiles_dir, proj_dir, link_root):
         dict(version=p, link='%s/%s/%s/index.html' % (link_root, proj_dir, p))
         for p in allpaths if _is_valid_doc_version(join_with_default_path(p))
     ]
-    if len(versions) == 0:
-        return None
-
     versions = natsort.natsorted(versions, key=sort_by_version)
-    descr = DEFAULT_PROJECT_DESCRIPTION
+
+    descr = None
     if 'description.txt' in allpaths:
         dpath = join_with_default_path('description.txt')
         with open(dpath, 'r', encoding='utf-8') as f:
             descr = f.read().strip()
+    if descr is None:
+        return None
+
     return {'name': proj_dir, 'versions': versions, 'description': descr}
 
 
