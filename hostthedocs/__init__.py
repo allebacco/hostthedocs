@@ -80,9 +80,10 @@ def add_doc_link(project, version):
 
 @app.route('/')
 def home():
-    projects = parse_docfiles(getconfig.docfiles_dir, getconfig.docfiles_link_root)
-    insert_link_to_latest(projects, '%(project)s/latest')
-    return render_template('index.html', projects=projects, **getconfig.renderables)
+    projects = database.get_projects()
+    for p in projects:
+        p.insert_latest_version()
+    return render_template('index.html', projects=[p.to_dict() for p in projects], **getconfig.renderables)
 
 
 @app.route('/<project>/latest/')

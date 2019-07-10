@@ -31,7 +31,7 @@
                         <p>{{ project.description|safe }}</p>
                         {% for version in project.versions %}
                             {% if version.version == 'latest' %}
-                            <p><a href="{{ version.link }}"
+                            <p><a href="{{ version.url }}"
                                   class="btn btn-primary btn-md btn-block"
                                   role="button">
                                     <strong>Latest</strong>
@@ -43,7 +43,7 @@
                                 role="menu" aria-haspopup="true" aria-expanded="false">
                         {% for version in project.versions | reverse %}
                             {% if version.version != 'latest' %}
-                                <option value="{{ version.link }}">{{ version.version }}</option>
+                                <option value="{{ version.url }}">{{ version.version }}</option>
                             {% endif %}
                         {% endfor %}
                         </select>

@@ -22,6 +22,9 @@ class Version:
             "url": self.url
         }
 
+    def copy(self):
+        return Version(self.version, self.url)
+
 
 class Project:
 
@@ -33,6 +36,15 @@ class Project:
 
     def add_versions(self, versions: 'Iterable[Version]'):
         self.versions = natsort.natsorted(versions, key=Version.sort_by_version)
+
+    def insert_latest_version(self):
+        latest = self.get_latest_version()
+        if latest is None:
+            return
+
+        latest = latest.copy()
+        latest.version = 'latest'
+        self.versions.append(latest)
 
     def get_latest_version(self):
         if len(self.versions) == 0:
