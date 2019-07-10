@@ -12,10 +12,17 @@ if not os.path.exists(DB_FILENAME):
 
     conn = sqlite3.connect(DB_FILENAME)
     conn.executescript("""
-        CREATE TABLE projects (name TEXT NOT NULL UNIQUE, description TEXT NOT NULL);
-        CREATE TABLE versions (project_id INTEGER NOT NULL, version TEXT NOT NULL, url TEXT NOT NULL);
+        CREATE TABLE projects (
+            name TEXT NOT NULL UNIQUE, 
+            description TEXT NOT NULL
+        );
 
-        CREATE UNIQUE INDEX project_version ON versions (project_id, version);
+        CREATE TABLE versions (
+            project_id INTEGER NOT NULL, 
+            version TEXT NOT NULL, 
+            url TEXT NOT NULL, 
+            UNIQUE(project_id, version)
+        );
     """)
     conn.close()
     
@@ -58,11 +65,11 @@ def get_projects():
     return projects
 
 
-def add_version(self, project: str, version: Version):
+def add_version(project: str, version: Version):
 
     try:
         conn = sqlite3.connect(DB_FILENAME)
-        cursor = conn.execute('SELECT rowid FROM projects WHERE project=?')
+        cursor = conn.execute('SELECT rowid FROM projects WHERE name=?', [project])
         row = cursor.fetchone()
         if row is None:
             return False
@@ -74,8 +81,11 @@ def add_version(self, project: str, version: Version):
             [project_id, version.version, version.url]
         )
 
+        conn.commit()
+
         conn.close()
-    except sqlite3.DatabaseError:
+    except sqlite3.DatabaseError as e:
+        print(e)
         conn.close()
 
     return True

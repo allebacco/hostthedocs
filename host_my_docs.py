@@ -1,125 +1,53 @@
-"""Run this script to test your Host the Docs server.
-It will POST a zip file.
-You can also pass in your own settings to test more.
-Requires the requests library.
 
-Used also to generate and upload Host the Docs documentation for its demo page.
-"""
-
-import argparse
-import logging
-import os
-import sys
-import time
-import zipfile
-import six
 import requests
 
-from tests.test_filekeeper import ZIPFILE
-from hostthedocs import getconfig as cfg
 
-L = logging.getLogger('host_my_docs')
+class HostMyDocs:
 
-def parse():
-    p = argparse.ArgumentParser()
-    p.add_argument('-n', '--name', default='Test Project')
-    p.add_argument('-d', '--description', default='Project description.')
-    p.add_argument('-v', '--version', default='7.8.9')
-    p.add_argument('-z', '--zippath', default=ZIPFILE)
-    p.add_argument(
-        '--hostthedocs', action='store_true',
-        help='Generates docs for Host the Docs. Ignore all other options if used.')
-    p.add_argument(
-        '-H', '--host',
-        default='%s:%s' % (cfg.host, cfg.port),
-        help='Host to use.')
-    p.add_argument('-D', '--delete', action='store_true')
-    p.add_argument('-A', '--deleteall', action='store_true')
-    return p.parse_args()
+    def __init__(self, host: str='localhost', port: int=5000):
+        self._base_url = 'http://{}:{}'.format(host, port)
 
 
-def _makeaddr(host):
-    return 'http://%s/hmfd' % host.rstrip('/')
+    def add_project(self, name: str, description: str):
+        data = {
+            'name': name,
+            'description': description
+        }
+
+        url = self._base_url + '/hmfd/projects'
+        response = requests.post(url, json=data)
+        if response.status_code != 200:
+            raise RuntimeError('Error during adding project ' + name)
+    
+    def get_projects(self) -> dict:
+        url = self._base_url + '/hmfd/projects'
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise RuntimeError('Error during getting projects')
+
+        return response.json()
+
+    def add_doc_files(self, project: str, version: str, filename: str):
+        url = self._base_url + '/hmfd/projects/{}/{}/file'.format(project, version)
+
+        response = requests.post(url, files={'file': open(filename, 'rb')})
+        if response.status_code != 200:
+            raise RuntimeError('Error during uploading new doc version')
+
+    def add_doc_url(self, project: str, version: str, link: str):
+        url = self._base_url + '/hmfd/projects/{}/{}/link'.format(project, version)
+
+        data = {'url': link}
+        response = requests.post(url, json=data)
+        if response.status_code != 200:
+            raise RuntimeError('Error during uploading new doc version')
 
 
-def _unlink(path):
-    try:
-        os.unlink(path)
-    except WindowsError:
-        time.sleep(1)
-        os.unlink(path)
 
+client = HostMyDocs()
+#client.add_project('My project 3', 'This is a demo project')
 
-def post(host, metadata, zippath):
-    address = _makeaddr(host)
-    L.info('POSTing to %s\n  metadata: %s\n  zippath: %s', address, metadata, zippath)
-    filename = os.path.basename(zippath)
-    got = requests.post(
-        address,
-        data=metadata,
-        files={"archive": (filename, open(zippath, 'rb'))})
-    return got
+client.add_doc_url('My project 3', '1.0.0', 'http://www.doc.com')
 
-
-def delete(host, metadata, deleteall=False):
-    address = _makeaddr(host)
-    address += '?name=%s&version=%s' % (
-        metadata['name'], metadata['version'])
-    if deleteall:
-        address += '&entire_project=True'
-    L.info('DELETING to %s', address)
-    got = requests.delete(address)
-    return got
-
-
-def generate_htd_docs():
-    from docutils.core import publish_string
-    with open('README.rst') as f:
-        html = publish_string(f.read(),writer_name='html').decode('utf8')
-    with open('index.html', 'w') as f:
-        f.write(html)
-    zippath = 'docstemp.zip'
-    z = zipfile.ZipFile(zippath, 'w')
-    z.write('index.html')
-    z.close()
-    _unlink('index.html')
-
-    metadata = {
-        'name': 'Host the Docs',
-        'version': '2.3.0',
-        'description': 'Makes documentation hosting easy.'}
-    host = 'localhost:5000'
-
-    try:
-        resp = post(host, metadata, zippath)
-    finally:
-        _unlink(zippath)
-
-    if resp.status_code != 200:
-        raise RuntimeError(repr(resp))
-
-
-def main():
-    opts = parse()
-    if opts.hostthedocs:
-        generate_htd_docs()
-        sys.exit(0)
-
-    metadata = {
-        'name': opts.name,
-        'version': opts.version,
-        'description': opts.description}
-    if opts.delete or opts.deleteall:
-        got = delete(opts.host, metadata, opts.deleteall)
-    else:
-        got = post(opts.host, metadata, opts.zippath)
-    content = got.content
-    if six.PY3:
-        content = str(content)
-    L.info('Recieved: %s: %s', got.status_code, content.replace('\n', ''))
-    sys.exit(0 if got.status_code == 200 else got.status_code)
-
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    main()
+projects = client.get_projects()
+print(projects)

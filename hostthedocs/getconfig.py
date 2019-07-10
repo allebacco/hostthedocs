@@ -39,7 +39,7 @@ To add your docs, see
 
 host = get('host', '127.0.0.1')
 port = int(get('port', 5000))
-debug = bool(get('debug', None))
+debug = bool(get('debug', True))
 readonly = get('readonly', False)
 disable_delete = get('disable_delete', False)
 max_content_mb = float(get('max_content_mb', 8))

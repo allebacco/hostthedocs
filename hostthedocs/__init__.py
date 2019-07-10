@@ -2,9 +2,11 @@ import os
 
 from flask import abort, Flask, jsonify, redirect, render_template, request
 
+from .util import UploadedFile
+from .entities import Version
 from . import getconfig, util
 from .filekeeper import delete_files, insert_link_to_latest, parse_docfiles, unpack_project
-from . import database
+from . import database, documents
 
 app = Flask(__name__)
 
@@ -39,38 +41,39 @@ def get_projects():
     return jsonify([p.to_dict() for p in projects])
 
 
-@app.route('/hmfd', methods=['POST'])
-def add_documentation():
+@app.route('/hmfd/projects/<project>/<version>/file', methods=['POST'])
+def add_doc_files(project, version):
     if getconfig.readonly:
         return abort(403)
 
     if not request.files:
         return abort(400, 'Request is missing a zip file.')
-    uploaded_file = util.UploadedFile.from_request(request)
-    unpack_project(
-        uploaded_file,
-        request.form,
-        getconfig.docfiles_dir
-    )
-    uploaded_file.close()
+
+    uploaded_file = UploadedFile.from_request(request)
+    ok = documents.add_document(project, version, uploaded_file)
+    if not ok:
+        return abort(500, 'Error during processing request')
 
     return jsonify({'success': True})
 
 
-@app.route('/hmfd', methods=['DELETE'])
-def delete_documentation():
+@app.route('/hmfd/projects/<project>/<version>/link', methods=['POST'])
+def add_doc_link(project, version):
     if getconfig.readonly:
         return abort(403)
 
-    if getconfig.disable_delete:
-        return abort(403)
+    print('Add link for ', project, 'to', version)
 
-    delete_files(
-        request.args['name'],
-        request.args.get('version'),
-        getconfig.docfiles_dir,
-        request.args.get('entire_project')
-    )
+    json_data = request.get_json()
+    if json_data is None:
+        abort(400, "Missing or invalid JSON data")
+    if 'url' not in json_data:
+        abort(400, "url missing from JSON data")
+
+    url = json_data['url']
+    ok = database.add_version(project, Version(version, url))
+    if not ok:
+        return abort(500, 'Error during processing request')
 
     return jsonify({'success': True})
 
