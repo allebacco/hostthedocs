@@ -37,7 +37,7 @@ Browse all available documentation below.
 To add your docs, see
 <a href="https://github.com/rgalanakis/hostthedocs#working-with-host-the-docs">these instructions</a>.""")
 
-host = get('host', '127.0.0.1')
+host = get('host', '0.0.0.0')
 port = int(get('port', 5000))
 debug = bool(get('debug', True))
 readonly = get('readonly', False)
