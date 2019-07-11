@@ -23,19 +23,13 @@ def get(attr, default):
 
 
 docfiles_dir = get('docfiles_dir', 'hostthedocs/static/docfiles')
-#assert os.path.isdir(docfiles_dir), 'Must exist: %s' % docfiles_dir
 docfiles_link_root = get('docfiles_link_root', 'static/docfiles')
 
-copyright = get('copyright', '')
+copyright = get('copyright', 'Camlin Italy s.r.l.')
 
-title = get('title', 'Host the Docs Home')
+title = get('title', 'Machine Learning Group documentation')
 
-welcome = get('welcome', 'Welcome to Host the Docs!')
-
-intro = get('intro', """
-Browse all available documentation below.
-To add your docs, see
-<a href="https://github.com/rgalanakis/hostthedocs#working-with-host-the-docs">these instructions</a>.""")
+header = get('header', "<h2>Machine Learning Group documentation</h2>")
 
 host = get('host', '0.0.0.0')
 port = int(get('port', 5000))

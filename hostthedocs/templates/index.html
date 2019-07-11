@@ -12,9 +12,7 @@
     <div class="container">
 
         <div class="jumbotron">
-            <h1>{{ welcome }}</h1>
-            <p>{{ intro|safe }}</p>
-            <!--<p><a class="btn btn-primary btn-large">Call to action!</a>-->
+            <p>{{ header|safe }}</p>
             </p>
         </div>
 
@@ -25,9 +23,9 @@
             {% for project in projects %}
             <div class="col-lg-3 col-md-6 htd-group">
                 <div class="thumbnail">
-                    <!--<img src="http://placehold.it/800x500" alt="">-->
                     <div class="caption htd-item">
                         <h3>{{ project.name }}</h3>
+                        <img src="{{ project.logo }}" alt="">
                         <p>{{ project.description|safe }}</p>
                         {% if project.versions|length > 0 %}
                             <p><a href="{{ project.versions|last|attr('url') }}"
@@ -43,8 +41,6 @@
                             <option value="{{ version.url }}">{{ version.version }}</option>
                         {% endfor %}
                         </select>
-                        <!--<p><a href="#" class="btn btn-primary">Buy Now!</a>  <a href="#" class="btn btn-default">More Info</a>-->
-                        <!--</p>-->
                     </div>
                 </div>
             </div>

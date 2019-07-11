@@ -28,11 +28,12 @@ class Version:
 
 class Project:
 
-    def __init__(self, rowid: int, name: str, description: str):
+    def __init__(self, rowid: int, name: str, description: str, logo: str):
         self.rowid = rowid
         self.name = name
         self.description = description
         self.versions = list()
+        self.logo = logo
 
     def add_versions(self, versions: 'Iterable[Version]'):
         self.versions = natsort.natsorted(versions, key=Version.sort_by_version)
@@ -48,4 +49,5 @@ class Project:
             "name": self.name,
             "description": self.description,
             "versions": [v.to_dict() for v in self.versions],
+            'logo': self.logo
         }

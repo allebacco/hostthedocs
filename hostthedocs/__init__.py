@@ -26,7 +26,12 @@ def add_project():
     if 'description' not in json_data:
         abort(400, "description missing from JSON data")
 
-    ok = database.add_project(json_data['name'], json_data['description'])
+    if 'logo' in json_data:
+        logo = json_data['logo']
+    else:
+        logo = 'http://placehold.it/96x96'
+
+    ok = database.add_project(json_data['name'], json_data['description'], logo)
 
     if ok:
         return jsonify({'success': True})
@@ -39,6 +44,44 @@ def get_projects():
 
     projects = database.get_projects()
     return jsonify([p.to_dict() for p in projects])
+
+
+@app.route('/hmfd/projects/<project>/description', methods=['PATCH'])
+def update_project_description(project):
+    if getconfig.readonly:
+        return abort(403)
+
+    json_data = request.get_json()
+    if json_data is None:
+        abort(400, "Missing or invalid JSON data")
+    if 'description' not in json_data:
+        abort(400, "description missing from JSON data")
+
+    ok = database.update_project_description(project, json_data['description'])
+
+    if ok:
+        return jsonify({'success': True})
+
+    return abort(500)
+
+
+@app.route('/hmfd/projects/<project>/logo', methods=['PATCH'])
+def update_project_logo(project):
+    if getconfig.readonly:
+        return abort(403)
+
+    json_data = request.get_json()
+    if json_data is None:
+        abort(400, "Missing or invalid JSON data")
+    if 'logo' not in json_data:
+        abort(400, "logo missing from JSON data")
+
+    ok = database.update_project_logo(project, json_data['logo'])
+
+    if ok:
+        return jsonify({'success': True})
+
+    return abort(500)
 
 
 @app.route('/hmfd/projects/<project>/<version>/file', methods=['POST'])
