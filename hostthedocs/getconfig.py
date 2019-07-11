@@ -27,9 +27,9 @@ docfiles_link_root = get('docfiles_link_root', 'static/docfiles')
 
 copyright = get('copyright', 'Camlin Italy s.r.l.')
 
-title = get('title', 'Machine Learning Group documentation')
+title = get('title', 'Software documentation')
 
-header = get('header', "<h2>Machine Learning Group documentation</h2>")
+header = get('header', "<h2>Software documentation</h2>")
 
 host = get('host', '0.0.0.0')
 port = int(get('port', 5000))

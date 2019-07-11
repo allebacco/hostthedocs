@@ -18,32 +18,36 @@
 
         <!-- /.row -->
 
-        <div class="row text-center">
+        <div class="card-columns">
 
             {% for project in projects %}
-            <div class="col-lg-3 col-md-6 htd-group">
-                <div class="thumbnail">
-                    <div class="caption htd-item">
-                        <h3>{{ project.name }}</h3>
-                        <img src="{{ project.logo }}" alt="">
-                        <p>{{ project.description|safe }}</p>
+
+                <div class="card">
+                    <div class="card-body p-2">
+                        <h4 class="card-title">{{ project.name }}</h4>
+                        <img class="rounded mx-auto d-block" src="{{ project.logo }}"  alt="">
+                        <p class="card-text mt-2"> {{ project.description|safe }} </p>
                         {% if project.versions|length > 0 %}
-                            <p><a href="{{ project.versions|last|attr('url') }}"
-                                    class="btn btn-primary btn-md btn-block"
-                                    role="button">
+                            <p class="d-flex justify-content-center">
+                                <a href="{{ project.versions|last|attr('url') }}"
+                                        class="btn btn-primary"
+                                        role="button">
                                     <strong>Latest</strong>
-                            </a></p>
+                                </a>
+
+                                <span class="align-middle ml-2 mr-2"> or </span>
+
+                                <select name="{{ project.name }}" onchange="gotodocs(this);"
+                                        class="btn btn-success dropdown-toggle " type="button"
+                                        role="menu" aria-haspopup="true" aria-expanded="false">
+                                    {% for version in project.versions | reverse %}
+                                        <option value="{{ version.url }}">{{ version.version }}</option>
+                                    {% endfor %}
+                                </select>
+                            </p>
                         {% endif %}
-                        <select name="{{ project.name }}" onchange="gotodocs(this);"
-                                class="btn btn-success dropdown-toggle" type="button"
-                                role="menu" aria-haspopup="true" aria-expanded="false">
-                        {% for version in project.versions | reverse %}
-                            <option value="{{ version.url }}">{{ version.version }}</option>
-                        {% endfor %}
-                        </select>
                     </div>
                 </div>
-            </div>
             {% endfor %}
 
         </div>
