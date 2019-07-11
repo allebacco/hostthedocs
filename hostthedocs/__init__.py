@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = getconfig.max_content_mb * 1024 * 1024
 
 
-@app.route('/hmfd/projects', methods=['POST'])
+@app.route('/api/v1/projects', methods=['POST'])
 def add_project():
     if getconfig.readonly:
         return abort(403)
@@ -39,14 +39,21 @@ def add_project():
     return abort(500)
 
 
-@app.route('/hmfd/projects', methods=['GET'])
+@app.route('/api/v1/projects', methods=['GET'])
 def get_projects():
 
     projects = database.get_projects()
     return jsonify([p.to_dict() for p in projects])
 
 
-@app.route('/hmfd/projects/<project>/description', methods=['PATCH'])
+@app.route('/api/v1/projects/<project_name>', methods=['GET'])
+def get_project(project_name):
+
+    project = database.get_project(project_name)
+    return jsonify(project.to_dict())
+
+
+@app.route('/api/v1/projects/<project>/description', methods=['PATCH'])
 def update_project_description(project):
     if getconfig.readonly:
         return abort(403)
@@ -65,7 +72,7 @@ def update_project_description(project):
     return abort(500)
 
 
-@app.route('/hmfd/projects/<project>/logo', methods=['PATCH'])
+@app.route('/api/v1/projects/<project>/logo', methods=['PATCH'])
 def update_project_logo(project):
     if getconfig.readonly:
         return abort(403)
@@ -84,7 +91,7 @@ def update_project_logo(project):
     return abort(500)
 
 
-@app.route('/hmfd/projects/<project>/<version>/file', methods=['POST'])
+@app.route('/api/v1/projects/<project>/<version>/file', methods=['POST'])
 def add_doc_files(project, version):
     if getconfig.readonly:
         return abort(403)
@@ -100,7 +107,7 @@ def add_doc_files(project, version):
     return jsonify({'success': True})
 
 
-@app.route('/hmfd/projects/<project>/<version>/link', methods=['POST'])
+@app.route('/api/v1/projects/<project>/<version>/link', methods=['POST'])
 def add_doc_link(project, version):
     if getconfig.readonly:
         return abort(403)
@@ -127,25 +134,29 @@ def home():
     return render_template('index.html', projects=projects, **getconfig.renderables)
 
 
-@app.route('/<project>/latest/')
-def latest_root(project):
-    return latest(project, '')
+@app.route('/<project_name>/latest/')
+def latest_root(project_name):
+    return latest(project_name, '')
 
 
-@app.route('/<project>/latest/<path:path>')
-def latest(project, path):
-    parsed_docfiles = parse_docfiles(getconfig.docfiles_dir, getconfig.docfiles_link_root)
-    proj_for_name = dict((p['name'], p) for p in parsed_docfiles)
-    if project not in proj_for_name:
-        return 'Project %s not found' % project, 404
+@app.route('/<project_name>/latest/<path:path>')
+def latest(project_name, path):
+    project = database.get_project(project_name)
 
-    if len(proj_for_name[project]['versions']) == 0:
+    if project is None:
         abort(404)
 
-    latestindex = proj_for_name[project]['versions'][-1]['link']
+    latest_version = project.get_latest_version()
+    if latest_version is None:
+        abort(404)
+
+    latestindex = latest_version.url
     if path:
-        latestlink = '%s/%s' % (os.path.dirname(latestindex), path)
+        # Remove 'index.html' for doc url
+        if latestindex.endswith('index.html'):
+            latestindex = latestindex[:-len('/index.html')]
+        latestlink = '%s/%s' % (latestindex, path)
     else:
         latestlink = latestindex
-    # Should it be a 302 or something else?
+
     return redirect(latestlink)

@@ -66,6 +66,28 @@ def get_projects():
     return projects
 
 
+def get_project(name: str) -> Project:
+
+    project = None
+    try:
+        conn = sqlite3.connect(DB_FILENAME)
+        cursor = conn.execute('SELECT rowid, name, description, logo FROM projects WHERE name = ?', [name])
+        row = cursor.fetchone()
+        if row is not None:
+            project = Project(row[0], row[1], row[2], row[3])
+            cursor = conn.execute('SELECT version, url FROM versions WHERE project_id=?', [project.rowid])
+            versions = list()
+            for row in cursor.fetchall():
+                versions.append(Version(row[0], row[1]))
+            project.add_versions(versions)
+
+        conn.close()
+    except sqlite3.DatabaseError:
+        conn.close()
+
+    return project
+
+
 def update_project_description(project: str, new_description: str):
 
     try:

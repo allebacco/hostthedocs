@@ -17,13 +17,13 @@ class HostMyDocs:
         if logo is not None:
             data['logo'] = logo
 
-        url = self._base_url + '/hmfd/projects'
+        url = self._base_url + '/api/v1/projects'
         response = requests.post(url, json=data)
         if response.status_code != 200:
             raise RuntimeError('Error during adding project ' + name)
 
     def get_projects(self) -> dict:
-        url = self._base_url + '/hmfd/projects'
+        url = self._base_url + '/api/v1/projects'
         response = requests.get(url)
         if response.status_code != 200:
             raise RuntimeError('Error during getting projects')
@@ -31,7 +31,7 @@ class HostMyDocs:
         return response.json()
 
     def update_project_description(self, project: str, description: str):
-        url = self._base_url + '/hmfd/projects/{}/description'.format(project)
+        url = self._base_url + '/api/v1/projects/{}/description'.format(project)
 
         data = {'description': description}
 
@@ -40,7 +40,7 @@ class HostMyDocs:
             raise RuntimeError('Error during updating project description')
 
     def update_project_logo(self, project: str, logo: str):
-        url = self._base_url + '/hmfd/projects/{}/logo'.format(project)
+        url = self._base_url + '/api/v1/projects/{}/logo'.format(project)
 
         data = {'logo': logo}
 
@@ -49,14 +49,14 @@ class HostMyDocs:
             raise RuntimeError('Error during updating project logo')
 
     def add_doc_files(self, project: str, version: str, filename: str):
-        url = self._base_url + '/hmfd/projects/{}/{}/file'.format(project, version)
+        url = self._base_url + '/api/v1/projects/{}/{}/file'.format(project, version)
 
         response = requests.post(url, files={'file': open(filename, 'rb')})
         if response.status_code != 200:
             raise RuntimeError('Error during uploading new doc version')
 
     def add_doc_url(self, project: str, version: str, link: str):
-        url = self._base_url + '/hmfd/projects/{}/{}/link'.format(project, version)
+        url = self._base_url + '/api/v1/projects/{}/{}/link'.format(project, version)
 
         data = {'url': link}
         response = requests.post(url, json=data)
