@@ -33,9 +33,20 @@ class HostMyDocs:
     def update_project_description(self, project: str, description: str):
         url = self._base_url + '/hmfd/projects/{}/description'.format(project)
 
-        response = requests.patch(url, data=description.encode('utf8'))
+        data = {'description': description}
+
+        response = requests.patch(url, json=data)
         if response.status_code != 200:
             raise RuntimeError('Error during updating project description')
+
+    def update_project_logo(self, project: str, logo: str):
+        url = self._base_url + '/hmfd/projects/{}/logo'.format(project)
+
+        data = {'logo': logo}
+
+        response = requests.patch(url, json=data)
+        if response.status_code != 200:
+            raise RuntimeError('Error during updating project logo')
 
     def add_doc_files(self, project: str, version: str, filename: str):
         url = self._base_url + '/hmfd/projects/{}/{}/file'.format(project, version)
