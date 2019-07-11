@@ -25,7 +25,7 @@ def get(attr, default):
 docfiles_dir = get('docfiles_dir', 'hostthedocs/static/docfiles')
 docfiles_link_root = get('docfiles_link_root', 'static/docfiles')
 
-copyright = get('copyright', 'Camlin Italy s.r.l.')
+copyright = get('copyright', 'Host The Docs')
 
 title = get('title', 'Software documentation')
 
