@@ -3,7 +3,7 @@ import requests
 import base64
 
 
-class HostMyDocs:
+class ListTheDocs:
 
     def __init__(self, host: str='localhost', port: int=5000):
         self._base_url = 'http://{}:{}'.format(host, port)
@@ -48,13 +48,6 @@ class HostMyDocs:
         if response.status_code != 200:
             raise RuntimeError('Error during updating project logo')
 
-    def add_doc_files(self, project: str, version: str, filename: str):
-        url = self._base_url + '/api/v1/projects/{}/{}/file'.format(project, version)
-
-        response = requests.post(url, files={'file': open(filename, 'rb')})
-        if response.status_code != 200:
-            raise RuntimeError('Error during uploading new doc version')
-
     def add_doc_url(self, project: str, version: str, link: str):
         url = self._base_url + '/api/v1/projects/{}/{}/link'.format(project, version)
 
@@ -69,11 +62,3 @@ class HostMyDocs:
             data = f.read()
 
         return 'data:image/png;base64,' + base64.b64encode(data).decode('utf8')
-
-
-if __name__ == "__main__":
-
-    client = HostMyDocs()
-
-    projects = client.get_projects()
-    print(projects)

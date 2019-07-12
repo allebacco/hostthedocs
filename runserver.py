@@ -1,4 +1,5 @@
-from hostthedocs import app, getconfig
+from hostthedocs import serve
+
 
 if __name__ == '__main__':
-    getconfig.serve(app)
+    serve()

@@ -47,3 +47,6 @@ index.html
 
 # Visual Studio Code
 .vscode
+
+# Flask generated files
+instance

@@ -1,9 +1,5 @@
 import natsort
 
-def sort_by_version(x):
-    # See http://natsort.readthedocs.io/en/stable/examples.html
-    return x['version'].replace('.', '~') + 'z'
-
 
 class Version:
 
