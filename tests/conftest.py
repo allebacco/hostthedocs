@@ -22,8 +22,6 @@ def app():
     with app.app_context():
         init_db()
 
-    app.test_client()
-
     yield app
 
     # close and remove the temporary database
