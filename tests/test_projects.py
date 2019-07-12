@@ -89,7 +89,10 @@ def test_add_version(client):
     response = client.post('/api/v1/projects', json={'name': 'test_project', 'description': 'A very long string'})
     assert response.status_code == 200
 
-    response = client.post('/api/v1/projects/test_project/1.0.0/link', json={'url': 'www.example.com/index.html'})
+    response = client.post(
+        '/api/v1/projects/test_project/versions',
+        json={'name': '1.0.0', 'url': 'www.example.com/index.html'}
+    )
     assert response.status_code == 200
 
     project = response.get_json()
@@ -100,5 +103,80 @@ def test_add_version(client):
     assert 'logo' in project
     assert 'versions' in project
     assert isinstance(project['versions'], list)
-    assert project['versions'][0]['version'] == '1.0.0'
+    assert project['versions'][0]['name'] == '1.0.0'
     assert project['versions'][0]['url'] == 'www.example.com/index.html'
+
+
+def test_remove_version(client):
+
+    response = client.post('/api/v1/projects', json={'name': 'test_project', 'description': 'A very long string'})
+    assert response.status_code == 200
+
+    # Add multiple versions
+    response = client.post(
+        '/api/v1/projects/test_project/versions',
+        json={'name': '1.0.0', 'url': 'www.example.com/1.0.0/index.html'}
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        '/api/v1/projects/test_project/versions',
+        json={'name': '2.0.0', 'url': 'www.example.com/2.0.0/index.html'}
+    )
+    assert response.status_code == 200
+
+    response = client.delete('/api/v1/projects/test_project/versions/2.0.0')
+    assert response.status_code == 200
+
+    response = client.get('/api/v1/projects/test_project')
+    assert response.status_code == 200
+
+    project = response.get_json()
+    assert 'name' in project
+    assert project['name'] == 'test_project'
+    assert 'description' in project
+    assert project['description'] == 'A very long string'
+    assert 'logo' in project
+    assert 'versions' in project
+    assert isinstance(project['versions'], list)
+    assert len(project['versions']) == 1
+    assert project['versions'][0]['name'] == '1.0.0'
+    assert project['versions'][0]['url'] == 'www.example.com/1.0.0/index.html'
+
+
+def test_update_version_link(client):
+
+    response = client.post('/api/v1/projects', json={'name': 'test_project', 'description': 'A very long string'})
+    assert response.status_code == 200
+
+    # Add multiple versions
+    response = client.post(
+        '/api/v1/projects/test_project/versions',
+        json={'name': '1.0.0', 'url': 'www.example.com/1.0.0/index.html'}
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        '/api/v1/projects/test_project/versions',
+        json={'name': '2.0.0', 'url': 'www.example.com/2.0.0/index.html'}
+    )
+    assert response.status_code == 200
+
+    response = client.patch(
+        '/api/v1/projects/test_project/versions/2.0.0/link',
+        json={'url': 'www.newexample.com/2.0.0/index.html'}
+    )
+    assert response.status_code == 200
+
+    project = response.get_json()
+    assert 'name' in project
+    assert project['name'] == 'test_project'
+    assert 'description' in project
+    assert project['description'] == 'A very long string'
+    assert 'logo' in project
+    assert 'versions' in project
+    assert isinstance(project['versions'], list)
+    assert project['versions'][0]['name'] == '1.0.0'
+    assert project['versions'][0]['url'] == 'www.example.com/1.0.0/index.html'
+    assert project['versions'][1]['name'] == '2.0.0'
+    assert project['versions'][1]['url'] == 'www.newexample.com/2.0.0/index.html'

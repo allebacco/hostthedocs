@@ -3,23 +3,23 @@ import natsort
 
 class Version:
 
-    def __init__(self, version: str, url: str):
-        self.version = version
+    def __init__(self, name: str, url: str):
+        self.name = name
         self.url = url
 
     @staticmethod
     def sort_by_version(version: 'Version'):
         # See http://natsort.readthedocs.io/en/stable/examples.html
-        return version.version.replace('.', '~') + 'z'
+        return version.name.replace('.', '~') + 'z'
 
     def to_dict(self):
         return {
-            "version": self.version,
+            "name": self.name,
             "url": self.url
         }
 
     def copy(self):
-        return Version(self.version, self.url)
+        return Version(self.name, self.url)
 
 
 class Project:

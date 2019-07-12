@@ -89,8 +89,42 @@ def update_project_logo(project_name):
     return abort(500)
 
 
-@projects_apis.route('/api/v1/projects/<project_name>/<version>/link', methods=['POST'])
-def add_version(project_name, version):
+@projects_apis.route('/api/v1/projects/<project_name>/versions', methods=['POST'])
+def add_version(project_name):
+    if current_app.config['READONLY']:
+        return abort(403)
+
+    json_data = request.get_json()
+    if json_data is None:
+        abort(400, "Missing or invalid JSON data")
+    if 'url' not in json_data:
+        abort(400, "url missing from JSON data")
+    if 'name' not in json_data:
+        abort(400, "name missing from JSON data")
+
+    url = json_data['url']
+    version_name = json_data['name']
+    ok = database.add_version(project_name, Version(version_name, url))
+    if not ok:
+        return abort(500, 'Error during processing request')
+
+    project = database.get_project(project_name)
+    return jsonify(project.to_dict())
+
+
+@projects_apis.route('/api/v1/projects/<project_name>/versions/<version_name>', methods=['DELETE'])
+def remove_version(project_name, version_name):
+    if current_app.config['READONLY']:
+        return abort(403)
+
+    database.remove_version(project_name, version_name)
+
+    project = database.get_project(project_name)
+    return jsonify(project.to_dict())
+
+
+@projects_apis.route('/api/v1/projects/<project_name>/versions/<version_name>/link', methods=['PATCH'])
+def update_version_link(project_name, version_name):
     if current_app.config['READONLY']:
         return abort(403)
 
@@ -101,9 +135,7 @@ def add_version(project_name, version):
         abort(400, "url missing from JSON data")
 
     url = json_data['url']
-    ok = database.add_version(project_name, Version(version, url))
-    if not ok:
-        return abort(500, 'Error during processing request')
+    database.update_version_link(project_name, version_name, url)
 
     project = database.get_project(project_name)
     return jsonify(project.to_dict())

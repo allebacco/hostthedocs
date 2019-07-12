@@ -46,9 +46,9 @@ def init_db():
 
         CREATE TABLE IF NOT EXISTS versions (
             project_id INTEGER NOT NULL,
-            version TEXT NOT NULL,
+            name TEXT NOT NULL,
             url TEXT NOT NULL,
-            UNIQUE(project_id, version)
+            UNIQUE(project_id, name)
         );
     """)
 
@@ -88,7 +88,7 @@ def get_projects():
         projects.append(Project(row[0], row[1], row[2], row[3]))
 
     for project in projects:
-        cursor = db.execute('SELECT version, url FROM versions WHERE project_id=?', [project.rowid])
+        cursor = db.execute('SELECT name, url FROM versions WHERE project_id=?', [project.rowid])
         versions = list()
         for row in cursor.fetchall():
             versions.append(Version(row[0], row[1]))
@@ -107,7 +107,7 @@ def get_project(name: str) -> Project:
         return None
 
     project = Project(row[0], row[1], row[2], row[3])
-    cursor = db.execute('SELECT version, url FROM versions WHERE project_id=?', [project.rowid])
+    cursor = db.execute('SELECT name, url FROM versions WHERE project_id=?', [project.rowid])
     versions = list()
     for row in cursor.fetchall():
         versions.append(Version(row[0], row[1]))
@@ -167,8 +167,45 @@ def add_version(project: str, version: Version):
     project_id = row[0]
 
     db.execute(
-        'INSERT OR REPLACE INTO versions(project_id, version, url) VALUES(?,?,?)',
-        [project_id, version.version, version.url]
+        'INSERT OR REPLACE INTO versions(project_id, name, url) VALUES(?,?,?)',
+        (project_id, version.name, version.url)
+    )
+    db.commit()
+
+    return True
+
+
+def remove_version(project_name: str, version_name: str):
+
+    db = get_db()
+    cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project_name])
+    row = cursor.fetchone()
+    if row is None:
+        return False
+
+    project_id = row[0]
+
+    db.execute(
+        'DELETE FROM versions WHERE project_id=? AND name=?', (project_id, version_name)
+    )
+    db.commit()
+
+    return True
+
+
+def update_version_link(project: str, version_name: str, new_url: str):
+
+    db = get_db()
+    cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project])
+    row = cursor.fetchone()
+    if row is None:
+        return False
+
+    project_id = row[0]
+
+    db.execute(
+        'UPDATE versions SET url=? WHERE project_id=? AND name=?',
+        (new_url, project_id, version_name)
     )
     db.commit()
 
