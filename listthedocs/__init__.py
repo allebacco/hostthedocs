@@ -17,6 +17,12 @@ def create_app(override_config: dict=None):
         # store the database in the instance folder
         DATABASE=os.path.join(app.instance_path, 'listmydocs.sqlite'),
         MAX_CONTENT_LENGTH=8 * 1024 * 1024,
+
+        COPYRIGHT='List The Docs',
+        TITLE='Software documentation',
+        HEADER="<h2>Software documentation</h2>",
+
+        READONLY=False
     )
 
     app.config.from_pyfile('config.py', silent=True)

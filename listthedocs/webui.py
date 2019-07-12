@@ -2,9 +2,8 @@
 
 import os
 
-from flask import abort, redirect, render_template, Blueprint
+from flask import current_app, abort, redirect, render_template, Blueprint
 
-from . import getconfig
 from . import database
 
 
@@ -14,7 +13,13 @@ webui = Blueprint('webui', __name__, template_folder='templates')
 @webui.route('/')
 def home():
     projects = database.get_projects()
-    return render_template('index.html', projects=projects, **getconfig.renderables)
+    return render_template(
+        'index.html',
+        projects=projects,
+        title=current_app.config['TITLE'],
+        copyright=current_app.config['COPYRIGHT'],
+        header=current_app.config['HEADER'],
+    )
 
 
 @webui.route('/<project_name>/latest/')

@@ -1,10 +1,8 @@
 import os
 
-from flask import Blueprint
-from flask import abort, Flask, jsonify, redirect, render_template, request
+from flask import Blueprint, current_app, abort, Flask, jsonify, redirect, render_template, request
 
 from .entities import Version
-from . import getconfig
 from . import database
 
 
@@ -13,7 +11,7 @@ projects_apis = Blueprint('projects_apis', __name__)
 
 @projects_apis.route('/api/v1/projects', methods=['POST'])
 def add_project():
-    if getconfig.readonly:
+    if current_app.config['READONLY']:
         return abort(403)
 
     json_data = request.get_json()
@@ -53,7 +51,7 @@ def get_project(project_name):
 
 @projects_apis.route('/api/v1/projects/<project>/description', methods=['PATCH'])
 def update_project_description(project):
-    if getconfig.readonly:
+    if current_app.config['READONLY']:
         return abort(403)
 
     json_data = request.get_json()
@@ -72,7 +70,7 @@ def update_project_description(project):
 
 @projects_apis.route('/api/v1/projects/<project>/logo', methods=['PATCH'])
 def update_project_logo(project):
-    if getconfig.readonly:
+    if current_app.config['READONLY']:
         return abort(403)
 
     json_data = request.get_json()
@@ -91,7 +89,7 @@ def update_project_logo(project):
 
 @projects_apis.route('/api/v1/projects/<project>/<version>/link', methods=['POST'])
 def add_doc_link(project, version):
-    if getconfig.readonly:
+    if current_app.config['READONLY']:
         return abort(403)
 
     print('Add link for ', project, 'to', version)

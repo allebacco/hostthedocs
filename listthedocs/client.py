@@ -5,8 +5,9 @@ import base64
 
 class ListTheDocs:
 
-    def __init__(self, host: str='localhost', port: int=5000):
+    def __init__(self, host: str='localhost', port: int=5000, client=requests):
         self._base_url = 'http://{}:{}'.format(host, port)
+        self._client = client
 
     def add_project(self, name: str, description: str, logo: str=None):
         data = {
@@ -27,6 +28,14 @@ class ListTheDocs:
         response = requests.get(url)
         if response.status_code != 200:
             raise RuntimeError('Error during getting projects')
+
+        return response.json()
+
+    def get_project(self, name) -> dict:
+        url = self._base_url + '/api/v1/projects/{}'.format(name)
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise RuntimeError('Error during getting project ' + name)
 
         return response.json()
 

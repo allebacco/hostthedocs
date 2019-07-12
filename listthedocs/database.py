@@ -5,7 +5,6 @@ import click
 from flask import current_app, g
 from flask.cli import with_appcontext
 
-from . import getconfig
 from .entities import Project, Version
 
 
@@ -72,12 +71,9 @@ def init_app(app):
 
 def add_project(name: str, description: str, logo: str):
 
-    try:
-        db = get_db()
-        db.execute('INSERT INTO projects(name, description, logo) VALUES(?,?,?)', (name, description, logo))
-        db.commit()
-    except sqlite3.DatabaseError:
-        return False
+    db = get_db()
+    db.execute('INSERT INTO projects(name, description, logo) VALUES(?,?,?)', (name, description, logo))
+    db.commit()
 
     return True
 
@@ -120,71 +116,59 @@ def get_project(name: str) -> Project:
 
 def update_project_description(project: str, new_description: str):
 
-    try:
-        db = get_db()
-        cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project])
-        row = cursor.fetchone()
-        if row is None:
-            return False
+    db = get_db()
+    cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project])
+    row = cursor.fetchone()
+    if row is None:
+        return False
 
-        project_id = row[0]
+    project_id = row[0]
 
-        db.execute(
-            'UPDATE projects SET description = ? WHERE rowid = ?',
-            [new_description, project_id]
-        )
+    db.execute(
+        'UPDATE projects SET description = ? WHERE rowid = ?',
+        [new_description, project_id]
+    )
 
-        db.commit()
-
-    except sqlite3.DatabaseError as e:
-        print(e)
+    db.commit()
 
     return True
 
 
 def update_project_logo(project: str, new_logo: str):
 
-    try:
-        db = get_db()
-        cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project])
-        row = cursor.fetchone()
-        if row is None:
-            return False
+    db = get_db()
+    cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project])
+    row = cursor.fetchone()
+    if row is None:
+        return False
 
-        project_id = row[0]
+    project_id = row[0]
 
-        db.execute(
-            'UPDATE projects SET logo = ? WHERE rowid = ?',
-            [new_logo, project_id]
-        )
+    db.execute(
+        'UPDATE projects SET logo = ? WHERE rowid = ?',
+        [new_logo, project_id]
+    )
 
-        db.commit()
-
-    except sqlite3.DatabaseError as e:
-        print(e)
+    db.commit()
 
     return True
 
 
 def add_version(project: str, version: Version):
 
-    try:
-        db = get_db()
-        cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project])
-        row = cursor.fetchone()
-        if row is None:
-            return False
+    db = get_db()
+    cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project])
+    row = cursor.fetchone()
+    if row is None:
+        return False
 
-        project_id = row[0]
+    project_id = row[0]
 
-        db.execute(
-            'INSERT OR REPLACE INTO versions(project_id, version, url) VALUES(?,?,?)',
-            [project_id, version.version, version.url]
-        )
+    db.execute(
+        'INSERT OR REPLACE INTO versions(project_id, version, url) VALUES(?,?,?)',
+        [project_id, version.version, version.url]
+    )
 
-        db.commit()
-
-    except sqlite3.DatabaseError as e:
-        print(e)
+    db.commit()
 
     return True
