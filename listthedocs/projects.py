@@ -69,18 +69,24 @@ def update_project_description(project_name):
     return abort(500)
 
 
-@projects_apis.route('/api/v1/projects/<project_name>/logo', methods=['PATCH'])
-def update_project_logo(project_name):
+@projects_apis.route('/api/v1/projects/<project_name>', methods=['PATCH'])
+def update_project(project_name):
     if current_app.config['READONLY']:
         return abort(403)
 
     json_data = request.get_json()
     if json_data is None:
         abort(400, "Missing or invalid JSON data")
-    if 'logo' not in json_data:
-        abort(400, "logo missing from JSON data")
 
-    ok = database.update_project_logo(project_name, json_data['logo'])
+    kwargs = dict()
+    if 'logo' in json_data:
+        kwargs['logo'] = json_data['logo']
+    if 'description' in json_data:
+        kwargs['description'] = json_data['description']
+    if len(kwargs) == 0:
+        abort(400, "No field to update")
+
+    ok = database.update_project(project_name, **kwargs)
 
     if ok:
         project = database.get_project(project_name)

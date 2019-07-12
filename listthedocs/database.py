@@ -156,6 +156,33 @@ def update_project_logo(project: str, new_logo: str):
     return True
 
 
+def update_project(project_name: str, description: str=None, logo: str=None):
+
+    db = get_db()
+    cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project_name])
+    row = cursor.fetchone()
+    if row is None:
+        return False
+
+    project_id = row[0]
+
+    if description is not None:
+        db.execute(
+            'UPDATE projects SET description = ? WHERE rowid = ?',
+            [description, project_id]
+        )
+
+    if logo is not None:
+        db.execute(
+            'UPDATE projects SET logo = ? WHERE rowid = ?',
+            [logo, project_id]
+        )
+
+    db.commit()
+
+    return True
+
+
 def add_version(project: str, version: Version):
 
     db = get_db()
