@@ -27,10 +27,10 @@ def add_project():
     else:
         logo = 'http://placehold.it/96x96'
 
-    ok = database.add_project(json_data['name'], json_data['description'], logo)
+    project = database.add_project(json_data['name'], json_data['description'], logo)
 
-    if ok:
-        return jsonify({'success': True})
+    if project is not None:
+        return jsonify(project.to_dict())
 
     return abort(500)
 
@@ -49,8 +49,8 @@ def get_project(project_name):
     return jsonify(project.to_dict())
 
 
-@projects_apis.route('/api/v1/projects/<project>/description', methods=['PATCH'])
-def update_project_description(project):
+@projects_apis.route('/api/v1/projects/<project_name>/description', methods=['PATCH'])
+def update_project_description(project_name):
     if current_app.config['READONLY']:
         return abort(403)
 
@@ -60,16 +60,17 @@ def update_project_description(project):
     if 'description' not in json_data:
         abort(400, "description missing from JSON data")
 
-    ok = database.update_project_description(project, json_data['description'])
+    ok = database.update_project_description(project_name, json_data['description'])
 
     if ok:
-        return jsonify({'success': True})
+        project = database.get_project(project_name)
+        return jsonify(project.to_dict())
 
     return abort(500)
 
 
-@projects_apis.route('/api/v1/projects/<project>/logo', methods=['PATCH'])
-def update_project_logo(project):
+@projects_apis.route('/api/v1/projects/<project_name>/logo', methods=['PATCH'])
+def update_project_logo(project_name):
     if current_app.config['READONLY']:
         return abort(403)
 
@@ -79,20 +80,19 @@ def update_project_logo(project):
     if 'logo' not in json_data:
         abort(400, "logo missing from JSON data")
 
-    ok = database.update_project_logo(project, json_data['logo'])
+    ok = database.update_project_logo(project_name, json_data['logo'])
 
     if ok:
-        return jsonify({'success': True})
+        project = database.get_project(project_name)
+        return jsonify(project.to_dict())
 
     return abort(500)
 
 
-@projects_apis.route('/api/v1/projects/<project>/<version>/link', methods=['POST'])
-def add_doc_link(project, version):
+@projects_apis.route('/api/v1/projects/<project_name>/<version>/link', methods=['POST'])
+def add_version(project_name, version):
     if current_app.config['READONLY']:
         return abort(403)
-
-    print('Add link for ', project, 'to', version)
 
     json_data = request.get_json()
     if json_data is None:
@@ -101,8 +101,9 @@ def add_doc_link(project, version):
         abort(400, "url missing from JSON data")
 
     url = json_data['url']
-    ok = database.add_version(project, Version(version, url))
+    ok = database.add_version(project_name, Version(version, url))
     if not ok:
         return abort(500, 'Error during processing request')
 
-    return jsonify({'success': True})
+    project = database.get_project(project_name)
+    return jsonify(project.to_dict())

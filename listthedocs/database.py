@@ -69,13 +69,13 @@ def init_app(app):
     app.cli.add_command(init_db_command)
 
 
-def add_project(name: str, description: str, logo: str):
+def add_project(name: str, description: str, logo: str) -> Project:
 
     db = get_db()
     db.execute('INSERT INTO projects(name, description, logo) VALUES(?,?,?)', (name, description, logo))
     db.commit()
 
-    return True
+    return get_project(name)
 
 
 def get_projects():
@@ -103,13 +103,15 @@ def get_project(name: str) -> Project:
     db = get_db()
     cursor = db.execute('SELECT rowid, name, description, logo FROM projects WHERE name = ?', [name])
     row = cursor.fetchone()
-    if row is not None:
-        project = Project(row[0], row[1], row[2], row[3])
-        cursor = db.execute('SELECT version, url FROM versions WHERE project_id=?', [project.rowid])
-        versions = list()
-        for row in cursor.fetchall():
-            versions.append(Version(row[0], row[1]))
-        project.add_versions(versions)
+    if row is None:
+        return None
+
+    project = Project(row[0], row[1], row[2], row[3])
+    cursor = db.execute('SELECT version, url FROM versions WHERE project_id=?', [project.rowid])
+    versions = list()
+    for row in cursor.fetchall():
+        versions.append(Version(row[0], row[1]))
+    project.add_versions(versions)
 
     return project
 
@@ -168,7 +170,6 @@ def add_version(project: str, version: Version):
         'INSERT OR REPLACE INTO versions(project_id, version, url) VALUES(?,?,?)',
         [project_id, version.version, version.url]
     )
-
     db.commit()
 
     return True
