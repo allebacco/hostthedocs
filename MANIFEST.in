@@ -1,7 +1,5 @@
-recursive-include hostthedocs *.py
-recursive-include hostthedocs/static *.*
-recursive-include hostthedocs/templates *.html
-prune hostthedocs/static/docfiles
+recursive-include listthedocs *.py
+recursive-include listthedocs/templates *.html
 include *.py
 include LICENSE.txt
 include README.rst
