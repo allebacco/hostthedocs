@@ -52,7 +52,7 @@ class Project(Entity):
         return {
             "name": self.name,
             "description": self.description,
-            "versions": [v.to_json() for v in self.versions],
+            "versions": tuple(v.to_json() for v in self.versions),
             'logo': self.logo
         }
 
@@ -72,24 +72,24 @@ class ListTheDocs:
         self._session = requests.Session()
 
     def add_project(self, project: Project) -> Project:
-        url = self._base_url + '/api/v1/projects'
-        response = self._session.post(url, json=project.to_json())
+        endpoint_url = self._base_url + '/api/v1/projects'
+        response = self._session.post(endpoint_url, json=project.to_json())
         if response.status_code != 201:
             raise RuntimeError('Error during adding project ' + project.name)
 
         return Project.from_json(response.json())
 
     def get_projects(self) -> 'tuple[Project]':
-        url = self._base_url + '/api/v1/projects'
-        response = self._session.get(url)
+        endpoint_url = self._base_url + '/api/v1/projects'
+        response = self._session.get(endpoint_url)
         if response.status_code != 200:
             raise RuntimeError('Error during getting projects')
 
         return tuple(Project.from_json(p) for p in response.json())
 
     def get_project(self, name) -> Project:
-        url = self._base_url + '/api/v1/projects/{}'.format(name)
-        response = self._session.get(url)
+        endpoint_url = self._base_url + '/api/v1/projects/{}'.format(name)
+        response = self._session.get(endpoint_url)
         if response.status_code == 404:
             return None
         if response.status_code != 200:
@@ -98,7 +98,7 @@ class ListTheDocs:
         return Project.from_json(response.json())
 
     def update_project(self, project_name: str, *, description: str=None, logo: str=None) -> Project:
-        url = self._base_url + '/api/v1/projects/{}'.format(project_name)
+        endpoint_url = self._base_url + '/api/v1/projects/{}'.format(project_name)
 
         json = dict()
         if description is not None:
@@ -106,36 +106,36 @@ class ListTheDocs:
         if logo is not None:
             json['logo'] = logo
 
-        response = self._session.patch(url, json=json)
+        response = self._session.patch(endpoint_url, json=json)
         if response.status_code != 200:
             raise RuntimeError('Error during updating project')
 
         return Project.from_json(response.json())
 
     def add_version(self, project_name: str, version: Version) -> Project:
-        url = self._base_url + '/api/v1/projects/{}/versions'.format(project_name)
-        response = self._session.post(url, json=version.to_json())
+        endpoint_url = self._base_url + '/api/v1/projects/{}/versions'.format(project_name)
+        response = self._session.post(endpoint_url, json=version.to_json())
         if response.status_code != 201:
             raise RuntimeError('Error during creating project version')
 
         return Project.from_json(response.json())
 
     def delete_version(self, project_name: str, version_name: str) -> Project:
-        url = self._base_url + '/api/v1/projects/{}/versions/{}'.format(project_name, version_name)
-        response = self._session.delete(url)
+        endpoint_url = self._base_url + '/api/v1/projects/{}/versions/{}'.format(project_name, version_name)
+        response = self._session.delete(endpoint_url)
         if response.status_code != 200:
             raise RuntimeError('Error during deleting version ' + version_name)
 
         return Project.from_json(response.json())
 
     def update_version(self, project_name: str, version_name: str, *, url: str) -> Project:
-        url = self._base_url + '/api/v1/projects/{}/versions/{}/link'.format(project_name, version_name)
+        endpoint_url = self._base_url + '/api/v1/projects/{}/versions/{}'.format(project_name, version_name)
 
         json = dict()
         if url is not None:
             json['url'] = url
 
-        response = self._session.patch(url, json=json)
+        response = self._session.patch(endpoint_url, json=json)
         if response.status_code != 200:
             raise RuntimeError('Error during updating ' + version_name)
 

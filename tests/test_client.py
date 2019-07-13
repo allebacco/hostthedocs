@@ -116,3 +116,56 @@ def test_update_project_logo(ltd_client: ListTheDocs):
     assert project.name == 'test_project1'
     assert project.description == 'description1'
     assert project.logo == 'logo.jpg'
+
+
+def test_add_version(ltd_client: ListTheDocs):
+
+    ltd_client.add_project(Project('test_project1', 'description1'))
+    project = ltd_client.add_version('test_project1', Version('1.0.0', 'www.example.com/index.html'))
+
+    assert project.name == 'test_project1'
+    assert project.description == 'description1'
+    assert project.logo is None
+    assert isinstance(project.versions, tuple)
+    assert len(project.versions) == 1
+    assert project.versions[0].name == '1.0.0'
+    assert project.versions[0].url == 'www.example.com/index.html'
+
+
+def test_remove_version(ltd_client: ListTheDocs):
+
+    ltd_client.add_project(Project('test_project1', 'description1'))
+
+    # Add multiple versions
+    ltd_client.add_version('test_project1', Version('1.0.0', 'www.example.com/1.0.0/index.html'))
+    ltd_client.add_version('test_project1', Version('2.0.0', 'www.example.com/2.0.0/index.html'))
+
+    # Remove a version
+    ltd_client.delete_version('test_project1', '1.0.0')
+
+    project = ltd_client.get_project('test_project1')
+    assert project.name == 'test_project1'
+    assert project.description == 'description1'
+    assert len(project.versions) == 1
+    assert project.versions[0].name == '2.0.0'
+    assert project.versions[0].url == 'www.example.com/2.0.0/index.html'
+
+
+def test_update_version_link(ltd_client: ListTheDocs):
+
+    ltd_client.add_project(Project('test_project1', 'description1'))
+
+    # Add multiple versions
+    ltd_client.add_version('test_project1', Version('1.0.0', 'www.example.com/1.0.0/index.html'))
+    ltd_client.add_version('test_project1', Version('2.0.0', 'www.example.com/2.0.0/index.html'))
+
+    ltd_client.update_version('test_project1', '2.0.0', url='www.newexample.com/2.0.0/index.html')
+
+    project = ltd_client.get_project('test_project1')
+    assert project.name == 'test_project1'
+    assert project.description == 'description1'
+    assert len(project.versions) == 2
+    assert project.versions[0].name == '1.0.0'
+    assert project.versions[0].url == 'www.example.com/1.0.0/index.html'
+    assert project.versions[1].name == '2.0.0'
+    assert project.versions[1].url == 'www.newexample.com/2.0.0/index.html'
