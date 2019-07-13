@@ -25,7 +25,7 @@ def add_project():
 
     name = json_data['name']
     description = json_data['description']
-    logo = json_data.get('logo', 'http://placehold.it/96x96')
+    logo = json_data.get('logo', None) #'http://placehold.it/96x96')
     project = database.add_project(name, description, logo)
 
     if project is not None:
@@ -45,6 +45,8 @@ def get_projects():
 def get_project(project_name):
 
     project = database.get_project(project_name)
+    if project is None:
+        return json_response(404, json={'message': 'Project ' + project_name + ' does not exists'})
     return json_response(200, json=project)
 
 
@@ -97,7 +99,7 @@ def add_version(project_name):
         )
 
     project = database.get_project(project_name)
-    return json_response(200, json=project)
+    return json_response(201, json=project)
 
 
 @projects_apis.route('/api/v1/projects/<project_name>/versions/<version_name>', methods=['DELETE'])

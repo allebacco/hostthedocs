@@ -1,6 +1,19 @@
-from listthedocs import ListTheDocs
-
 import pytest
+
+
+def test_get_missing_project(client):
+
+    response = client.get('/api/v1/projects/test_project')
+    assert response.status_code == 404
+
+
+def test_get_project_when_none_exists(client):
+
+    response = client.get('/api/v1/projects')
+    assert response.status_code == 200
+
+    projects = response.get_json()
+    assert len(projects) == 0
 
 
 def test_add_project_creates_and_returns_the_project(client):
@@ -93,7 +106,7 @@ def test_add_version(client):
         '/api/v1/projects/test_project/versions',
         json={'name': '1.0.0', 'url': 'www.example.com/index.html'}
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     project = response.get_json()
     assert 'name' in project
@@ -117,14 +130,15 @@ def test_remove_version(client):
         '/api/v1/projects/test_project/versions',
         json={'name': '1.0.0', 'url': 'www.example.com/1.0.0/index.html'}
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     response = client.post(
         '/api/v1/projects/test_project/versions',
         json={'name': '2.0.0', 'url': 'www.example.com/2.0.0/index.html'}
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
 
+    # Remove a version
     response = client.delete('/api/v1/projects/test_project/versions/2.0.0')
     assert response.status_code == 200
 
@@ -154,14 +168,15 @@ def test_update_version_link(client):
         '/api/v1/projects/test_project/versions',
         json={'name': '1.0.0', 'url': 'www.example.com/1.0.0/index.html'}
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     response = client.post(
         '/api/v1/projects/test_project/versions',
         json={'name': '2.0.0', 'url': 'www.example.com/2.0.0/index.html'}
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
 
+    # Patch a version link
     response = client.patch(
         '/api/v1/projects/test_project/versions/2.0.0',
         json={'url': 'www.newexample.com/2.0.0/index.html'}

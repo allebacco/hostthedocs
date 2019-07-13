@@ -1,26 +1,33 @@
-
+from abc import ABC, abstractmethod, abstractstaticmethod
 import requests
 import base64
 
+class Entity(ABC):
 
-class Version:
+    @abstractmethod
+    def to_json(self) -> dict:
+        pass
+
+    @abstractstaticmethod
+    def from_json(obj: dict) -> 'Entity':
+        pass
+
+
+class Version(Entity):
 
     def __init__(self, name: str, url: str):
         self.name = name
         self.url = url
 
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "url": self.url
-        }
+    def to_json(self):
+        return {"name": self.name, "url": self.url}
 
     @staticmethod
-    def from_dict(obj: dict) -> 'Version':
+    def from_json(obj: dict) -> 'Version':
         return Version(name=obj['name'], url=obj['url'])
 
 
-class Project:
+class Project(Entity):
 
     def __init__(self, name: str, description: str, logo: str=None, versions=tuple()):
         self.name = name
@@ -28,105 +35,122 @@ class Project:
         self.versions = versions
         self.logo = logo
 
-    def get_latest_version(self):
+    def get_version(self, version_name) -> Version:
         if len(self.versions) == 0:
             return None
 
-        return self.versions[-1]
+        if version_name == 'latest':
+            return self.versions[-1]
 
-    def to_dict(self):
+        versions = list(filter(lambda v: v.name == version_name, self.versions))
+        if len(versions) > 0:
+            return versions[0]
+
+        return None
+
+    def to_json(self):
         return {
             "name": self.name,
             "description": self.description,
-            "versions": [v.to_dict() for v in self.versions],
+            "versions": [v.to_json() for v in self.versions],
             'logo': self.logo
         }
 
     @staticmethod
-    def from_dict(obj: dict) -> 'Project':
+    def from_json(obj: dict) -> 'Project':
         return Project(
             name=obj['name'], description=obj['description'],
             logo=obj['logo'],
-            versions=tuple(Version.from_dict(v) for v in obj['versions']),
+            versions=tuple(Version.from_json(v) for v in obj['versions']),
         )
-
-
 
 
 class ListTheDocs:
 
-    def __init__(self, host: str='localhost', port: int=5000):
-        self._base_url = 'http://{}:{}'.format(host, port)
+    def __init__(self, host: str='localhost', port: int=5000, protocol: str='http'):
+        self._base_url = '{}://{}:{}'.format(protocol, host, port)
         self._session = requests.Session()
 
     def add_project(self, project: Project) -> Project:
         url = self._base_url + '/api/v1/projects'
-        response = self._session.post(url, json=project.to_dict())
-        if response.status_code != 200:
+        response = self._session.post(url, json=project.to_json())
+        if response.status_code != 201:
             raise RuntimeError('Error during adding project ' + project.name)
 
-        return Project.from_dict(response.json())
+        return Project.from_json(response.json())
 
     def get_projects(self) -> 'tuple[Project]':
         url = self._base_url + '/api/v1/projects'
-        response = requests.get(url)
+        response = self._session.get(url)
         if response.status_code != 200:
             raise RuntimeError('Error during getting projects')
 
-        return tuple(Project.from_dict(p) for p in response.json())
+        return tuple(Project.from_json(p) for p in response.json())
 
     def get_project(self, name) -> Project:
         url = self._base_url + '/api/v1/projects/{}'.format(name)
-        response = requests.get(url)
+        response = self._session.get(url)
         if response.status_code == 404:
             return None
         if response.status_code != 200:
             raise RuntimeError('Error during getting project ' + name)
 
-        return Project.from_dict(response.json())
+        return Project.from_json(response.json())
 
-    def update_project_description(self, project_name: str, description: str) -> Project:
-        url = self._base_url + '/api/v1/projects/{}/description'.format(project_name)
-        response = requests.patch(url, json={'description': description})
+    def update_project(self, project_name: str, *, description: str=None, logo: str=None) -> Project:
+        url = self._base_url + '/api/v1/projects/{}'.format(project_name)
+
+        json = dict()
+        if description is not None:
+            json['description'] = description
+        if logo is not None:
+            json['logo'] = logo
+
+        response = self._session.patch(url, json=json)
         if response.status_code != 200:
-            raise RuntimeError('Error during updating project description')
+            raise RuntimeError('Error during updating project')
 
-        return Project.from_dict(response.json())
-
-    def update_project_logo(self, project_name: str, logo: str) -> Project:
-        url = self._base_url + '/api/v1/projects/{}/logo'.format(project_name)
-        response = requests.patch(url, json={'logo': logo})
-        if response.status_code != 200:
-            raise RuntimeError('Error during updating project logo')
-
-        return Project.from_dict(response.json())
+        return Project.from_json(response.json())
 
     def add_version(self, project_name: str, version: Version) -> Project:
         url = self._base_url + '/api/v1/projects/{}/versions'.format(project_name)
-        response = requests.post(url, json=version.to_dict())
-        if response.status_code != 200:
-            raise RuntimeError('Error during uploading new doc version')
+        response = self._session.post(url, json=version.to_json())
+        if response.status_code != 201:
+            raise RuntimeError('Error during creating project version')
 
-        return Project.from_dict(response.json())
+        return Project.from_json(response.json())
 
     def delete_version(self, project_name: str, version_name: str) -> Project:
         url = self._base_url + '/api/v1/projects/{}/versions/{}'.format(project_name, version_name)
-        response = requests.delete(url)
+        response = self._session.delete(url)
         if response.status_code != 200:
-            raise RuntimeError('Error during uploading new doc for version ' + version_name)
+            raise RuntimeError('Error during deleting version ' + version_name)
 
-        return Project.from_dict(response.json())
+        return Project.from_json(response.json())
 
-    def update_version_url(self, project_name: str, version_name: str, new_url: str) -> Project:
+    def update_version(self, project_name: str, version_name: str, *, url: str) -> Project:
         url = self._base_url + '/api/v1/projects/{}/versions/{}/link'.format(project_name, version_name)
-        response = requests.patch(url, json={'url': new_url})
-        if response.status_code != 200:
-            raise RuntimeError('Error during uploading new url for version ' + version_name)
 
-        return Project.from_dict(response.json())
+        json = dict()
+        if url is not None:
+            json['url'] = url
+
+        response = self._session.patch(url, json=json)
+        if response.status_code != 200:
+            raise RuntimeError('Error during updating ' + version_name)
+
+        return Project.from_json(response.json())
 
     @staticmethod
     def load_logo_from_file(filename: str) -> str:
+        """Load a an image for using as a project logo.
+
+        Args:
+            filename(str): The filename of the image
+
+        Returns:
+            str: The base64 of the image file to embed into the HTML 'img' tag
+        """
         with open(filename, 'rb') as f:
             data = f.read()
 

@@ -41,7 +41,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS projects (
             name TEXT NOT NULL UNIQUE,
             description TEXT NOT NULL,
-            logo TEXT NOT NULL
+            logo TEXT DEFAULT NULL
         );
 
         CREATE TABLE IF NOT EXISTS versions (
