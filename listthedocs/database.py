@@ -220,20 +220,22 @@ def remove_version(project_name: str, version_name: str):
     return True
 
 
-def update_version_link(project: str, version_name: str, new_url: str):
+def update_version(project_name: str, version_name: str, new_url: str=None):
 
     db = get_db()
-    cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project])
+    cursor = db.execute('SELECT rowid FROM projects WHERE name=?', [project_name])
     row = cursor.fetchone()
     if row is None:
         return False
 
     project_id = row[0]
 
-    db.execute(
-        'UPDATE versions SET url=? WHERE project_id=? AND name=?',
-        (new_url, project_id, version_name)
-    )
+    if new_url is not None:
+        db.execute(
+            'UPDATE versions SET url=? WHERE project_id=? AND name=?',
+            (new_url, project_id, version_name)
+        )
+
     db.commit()
 
     return True

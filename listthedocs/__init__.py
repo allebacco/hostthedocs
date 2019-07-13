@@ -42,7 +42,7 @@ def create_app(override_config: dict=None):
     database.init_app(app)
 
     # Setup endpoints
-    from . import projects, webui
+    from .controllers import projects, webui
     app.register_blueprint(projects.projects_apis)
     app.register_blueprint(webui.webui)
 
